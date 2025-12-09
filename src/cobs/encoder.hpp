@@ -7,7 +7,7 @@
 namespace cobs {
 std::vector<uint8_t> encode(const uint8_t* data, size_t length) {
   std::vector<uint8_t> encoded;
-  encoded.reserve(length + length / 254 + 2);
+  encoded.reserve(length + length / 254 + 2);  // allocate memory
   uint8_t count = 1;
   constexpr size_t mbs = 0xFF;
   size_t obs_pos = 0;
