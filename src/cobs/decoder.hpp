@@ -12,8 +12,6 @@ inline std::vector<uint8_t> decode(const uint8_t* data, size_t length) {
   constexpr size_t mbs = 0xFF;
   const size_t trimmed_length = length - 1;
   uint8_t delimiter = data[trimmed_length];
-  std::cout << "Delimiter: " << std::hex << static_cast<int>(delimiter)
-            << std::dec << std::endl;
   size_t i = 0;
   while (i < trimmed_length) {  // Last byte is delimiter
     uint8_t code = data[i];
