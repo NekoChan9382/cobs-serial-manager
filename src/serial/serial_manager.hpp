@@ -24,8 +24,8 @@ class SerialManager {
     } else {
       device_paths = port_name;
     }
-    serial_port_.set_option(boost::asio::serial_port_base::baud_rate(115200));
     serial_port_.open(device_paths);
+    serial_port_.set_option(boost::asio::serial_port_base::baud_rate(115200));
     serial_port_.async_read_some(boost::asio::buffer(&buf, 1),
                                  [this](const boost::system::error_code& ec,
                                         std::size_t bytes_transferred) {
@@ -47,6 +47,10 @@ class SerialManager {
     return saved_data_;
   }
 
+  void send(const std::vector<uint8_t>& data) {
+    boost::asio::write(serial_port_, boost::asio::buffer(data));
+  }
+
  private:
   void serial_callback(const boost::system::error_code& ec,
                        std::size_t bytes_transferred) {
@@ -60,6 +64,7 @@ class SerialManager {
         received_buffer_.clear();
         if (decoded.empty()) {
           std::cerr << "Decode error: invalid COBS data" << std::endl;
+          run_receive();
           return;
         }
 
@@ -70,12 +75,7 @@ class SerialManager {
       } else {
         received_buffer_.push_back(buf);
       }
-
-      serial_port_.async_read_some(boost::asio::buffer(&buf, 1),
-                                   [this](const boost::system::error_code& ec,
-                                          std::size_t bytes_transferred) {
-                                     serial_callback(ec, bytes_transferred);
-                                   });
+      run_receive();
     }
   }
   std::vector<std::string> find_serial_port() {
@@ -88,6 +88,14 @@ class SerialManager {
           device_paths.push_back(entry.path().string());
       }
     return device_paths;
+  }
+
+  void run_receive() {
+    serial_port_.async_read_some(boost::asio::buffer(&buf, 1),
+                                 [this](const boost::system::error_code& ec,
+                                        std::size_t bytes_transferred) {
+                                   serial_callback(ec, bytes_transferred);
+                                 });
   }
 
   boost::asio::io_service io_service_;
