@@ -3,4 +3,5 @@
 build/
 tests/
 BUILD.md
-CMakeLists.txt
+log/
+.vscode/
