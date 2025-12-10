@@ -1,9 +1,14 @@
 find_package(Boost REQUIRED COMPONENTS system)
 
-add_executable(listener serial_decode.cpp)
+set(EXAMPLES listener pingpong)
 
-target_link_libraries(listener PRIVATE
+foreach(example ${EXAMPLES})
+add_executable(${example} ${example}.cpp)
+
+target_link_libraries(${example} PRIVATE
   cobs-serial-manager
   Boost::system
   pthread
 )
+
+endforeach()
