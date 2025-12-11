@@ -53,30 +53,42 @@ class SerialManager {
 
  private:
   void serial_callback(const boost::system::error_code& ec,
-                       std::size_t bytes_transferred) {
+                       [[maybe_unused]] std::size_t bytes_transferred) {
     if (ec) {
       std::cerr << "Serial error: " << ec.message() << std::endl;
       return;
-    } else {
-      if (buf == '\n') {  // end of packet
+    }
+
+    // COBS delimiter (0x00) detection
+    if (buf == 0x00) {
+      // Packet complete
+      if (!received_buffer_.empty()) {
+        // Add delimiter for COBS decoding
+        received_buffer_.push_back(0x00);
+
         auto decoded =
             cobs::decode(received_buffer_.data(), received_buffer_.size());
         received_buffer_.clear();
+
         if (decoded.empty()) {
           std::cerr << "Decode error: invalid COBS data" << std::endl;
-          run_receive();
-          return;
-        }
-
-        {
+        } else {
           std::lock_guard<std::mutex> lock(data_mutex_);
           saved_data_ = decoded;
         }
-      } else {
-        received_buffer_.push_back(buf);
       }
-      run_receive();
+    } else {
+      // Buffer overflow protection
+      constexpr size_t MAX_BUFFER_SIZE = 10240;
+      if (received_buffer_.size() < MAX_BUFFER_SIZE) {
+        received_buffer_.push_back(buf);
+      } else {
+        std::cerr << "Buffer overflow, discarding packet" << std::endl;
+        received_buffer_.clear();
+      }
     }
+
+    run_receive();
   }
   std::vector<std::string> find_serial_port() {
     std::vector<std::string> device_paths;
