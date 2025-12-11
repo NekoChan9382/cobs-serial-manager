@@ -1,7 +1,6 @@
 .github/
 .clang-format
 build/
-tests/
 BUILD.md
 log/
 .vscode/
