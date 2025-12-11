@@ -48,7 +48,8 @@ class SerialManager {
   }
 
   void send(const std::vector<uint8_t>& data) {
-    boost::asio::write(serial_port_, boost::asio::buffer(data));
+    std::vector<uint8_t> encoded = cobs::encode(data.data(), data.size());
+    boost::asio::write(serial_port_, boost::asio::buffer(encoded));
   }
 
  private:
